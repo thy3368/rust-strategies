@@ -9,7 +9,7 @@
 //! ```
 
 use anyhow::Result;
-use dotenv::dotenv;
+use dotenv;
 use nautilus_binance::config::{BinanceDataClientConfig, BinanceExecClientConfig};
 use nautilus_binance::factories::{BinanceDataClientFactory, BinanceExecutionClientFactory};
 use nautilus_binance::common::enums::{BinanceEnvironment, BinanceProductType};
@@ -21,6 +21,14 @@ use tracing::{info, warn};
 use nautilus_strategies_rust::strategies::nautilus_compatible::create_strategy;
 
 fn main() -> Result<()> {
+    // 确保日志系统只初始化一次
+    static LOG_INITIALIZED: std::sync::Once = std::sync::Once::new();
+    LOG_INITIALIZED.call_once(|| {
+        tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::INFO)
+            .init();
+    });
+
     // 加载环境变量 - 明确指定 .env 文件路径
     let env_path = std::env::current_dir()
         .map(|dir| dir.join(".env"))
@@ -32,11 +40,6 @@ fn main() -> Result<()> {
     } else {
         warn!("未找到 .env 文件: {:?}", env_path);
     }
-
-    // 初始化日志系统
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
 
     info!("=================================================================");
     info!("Nautilus Trader - 实盘交易引擎");
