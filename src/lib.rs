@@ -7,8 +7,7 @@ pub mod strategies;
 pub mod indicators;
 
 // 导出主要组件
-pub use strategies::avellaneda_stoikov::AvellanedaStoikov;
-pub use strategies::config::StrategyConfig;
+pub use strategies::avellaneda_stoikov::{AvellanedaStoikov, ASConfig};
 
 
 /// 库版本

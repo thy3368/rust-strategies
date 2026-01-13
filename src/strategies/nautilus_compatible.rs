@@ -91,19 +91,22 @@ impl NautilusAvellanedaStoikov {
             // 取消现有订单
             self.cancel_all_orders(self.instrument_id, None, None)?;
 
-            // 提交新订单
+            // 提交新订单 - 使用 PRICE_PRECISION 和 QUANTITY_PRECISION（假设为 2 和 4，可根据实际调整）
+            const PRICE_PRECISION: u8 = 2;
+            const QUANTITY_PRECISION: u8 = 4;
+
             let bid_order = self.create_limit_order(
                 self.instrument_id,
                 OrderSide::Buy,
-                Price::from(quote.bid_price),
-                Quantity::from(quote.bid_size),
+                Price::new(quote.bid_price, PRICE_PRECISION),
+                Quantity::new(quote.bid_size, QUANTITY_PRECISION),
             )?;
 
             let ask_order = self.create_limit_order(
                 self.instrument_id,
                 OrderSide::Sell,
-                Price::from(quote.ask_price),
-                Quantity::from(quote.ask_size),
+                Price::new(quote.ask_price, PRICE_PRECISION),
+                Quantity::new(quote.ask_size, QUANTITY_PRECISION),
             )?;
 
             self.submit_order(bid_order, None, None)?;
@@ -132,13 +135,18 @@ impl NautilusAvellanedaStoikov {
             side,
             quantity,
             price,
-            TimeInForce::Gtc, // 当日有效
-            None,             // reduce only
-            None,             // quote quantity
-            None,             // tag
-            None,             // client order id
-            None,             // expiry time
-            None,             // post only
+            Some(TimeInForce::Gtc), // 当日有效（使用 Some 包装）
+            None,                   // 过期时间
+            None,                   // 只做市
+            None,                   // 只减仓
+            None,                   // 报价数量
+            None,                   // 显示数量
+            None,                   // 模拟触发
+            None,                   // 触发工具ID
+            None,                   // 执行算法ID
+            None,                   // 执行算法参数
+            None,                   // 标签
+            None,                   // 客户端订单ID
         ))
     }
 }
@@ -152,15 +160,15 @@ impl Component for NautilusAvellanedaStoikov {
         todo!()
     }
 
-    fn transition_state(&mut self, trigger: ComponentTrigger) -> Result<()> {
+    fn transition_state(&mut self, _trigger: ComponentTrigger) -> Result<()> {
         todo!()
     }
 
     fn register(
         &mut self,
-        trader_id: TraderId,
-        clock: Rc<RefCell<dyn Clock>>,
-        cache: Rc<RefCell<Cache>>,
+        _trader_id: TraderId,
+        _clock: Rc<RefCell<dyn Clock>>,
+        _cache: Rc<RefCell<Cache>>,
     ) -> Result<()> {
         todo!()
     }
@@ -175,9 +183,6 @@ impl Strategy for NautilusAvellanedaStoikov {
     // 策略启动时调用
     fn on_start(&mut self) -> Result<()> {
         log::info!("Avellaneda-Stoikov 策略启动");
-
-        // 订阅订单簿数据
-        self.subscribe_book_snapshots(self.instrument_id)?;
 
         // 开始交易
         self.is_trading = true;
@@ -214,8 +219,8 @@ impl DataActor for NautilusAvellanedaStoikov {
 
         // 转换为基础策略格式
         let snapshot = OrderBookSnapshot {
-            best_bid: order_book.best_bid().map(|p| p.as_f64()).unwrap_or(0.0),
-            best_ask: order_book.best_ask().map(|p| p.as_f64()).unwrap_or(0.0),
+            best_bid: order_book.best_bid_price().map(|p| p.as_f64()).unwrap_or(0.0),
+            best_ask: order_book.best_ask_price().map(|p| p.as_f64()).unwrap_or(0.0),
             bid_volume: order_book
                 .best_bid_size()
                 .map(|q| q.as_f64())
@@ -224,7 +229,7 @@ impl DataActor for NautilusAvellanedaStoikov {
                 .best_ask_size()
                 .map(|q| q.as_f64())
                 .unwrap_or(0.0),
-            timestamp_ns: order_book.ts_event(),
+            timestamp_ns: order_book.ts_last,
         };
 
         // 更新策略状态

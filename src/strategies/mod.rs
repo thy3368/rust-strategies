@@ -2,12 +2,10 @@
 //!
 //! 作为 Nautilus Trader 的插件实现各种交易策略
 
-pub mod config;
 pub mod avellaneda_stoikov;
 pub mod nautilus_compatible;
 
-pub use config::StrategyConfig;
-pub use avellaneda_stoikov::AvellanedaStoikov;
+pub use avellaneda_stoikov::{AvellanedaStoikov, ASConfig};
 pub use nautilus_compatible::{
     NautilusAvellanedaStoikov,
     NautilusASConfig,

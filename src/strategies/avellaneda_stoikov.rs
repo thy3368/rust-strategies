@@ -7,6 +7,7 @@
 //! - 零分配热路径
 
 use crate::CacheAligned;
+use nautilus_core::UnixNanos;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
@@ -60,7 +61,7 @@ pub struct ASConfig {
 impl Default for ASConfig {
     fn default() -> Self {
         Self {
-            instrument_id: "BTCUSDT".to_string(),
+            instrument_id: "BTCUSDT.BINANCE".to_string(),
             risk_aversion: 0.1,
             order_arrival_rate: 100.0,
             price_sensitivity: 1.5,
@@ -84,7 +85,7 @@ pub struct OrderBookSnapshot {
     pub best_ask: f64,
     pub bid_volume: f64,
     pub ask_volume: f64,
-    pub timestamp_ns: u64,
+    pub timestamp_ns: UnixNanos,
 }
 
 /// K线数据
@@ -130,7 +131,7 @@ pub struct AvellanedaStoikov {
     inventory_adjustments: CacheAligned<u64>,
 
     /// 最后更新时间
-    last_update_ns: u64,
+    last_update_ns: UnixNanos,
 }
 
 impl AvellanedaStoikov {
@@ -148,7 +149,7 @@ impl AvellanedaStoikov {
             quote_updates: CacheAligned::new(0),
             orderbook_updates: CacheAligned::new(0),
             inventory_adjustments: CacheAligned::new(0),
-            last_update_ns: 0,
+            last_update_ns: UnixNanos::new(0),
         }
     }
 
@@ -168,7 +169,7 @@ impl AvellanedaStoikov {
         self.update_price_history(new_mid);
 
         // 计算并返回新报价
-        Some(self.calculate_quotes(snapshot.timestamp_ns))
+        Some(self.calculate_quotes(snapshot.timestamp_ns.as_u64()))
     }
 
     /// 处理K线更新
@@ -304,7 +305,8 @@ impl AvellanedaStoikov {
         }
 
         // 计算对数收益率
-        let returns: Vec<f64> = self.price_history
+        let returns: Vec<f64> = self
+            .price_history
             .iter()
             .zip(self.price_history.iter().skip(1))
             .map(|(p1, p2)| (p2 / p1).ln())
@@ -318,9 +320,8 @@ impl AvellanedaStoikov {
         let mean = returns.iter().sum::<f64>() / returns.len() as f64;
 
         // 计算方差
-        let variance = returns.iter()
-            .map(|r| (r - mean).powi(2))
-            .sum::<f64>() / returns.len() as f64;
+        let variance =
+            returns.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / returns.len() as f64;
 
         variance.sqrt()
     }
@@ -347,7 +348,7 @@ impl AvellanedaStoikov {
         self.quote_updates.data = 0;
         self.orderbook_updates.data = 0;
         self.inventory_adjustments.data = 0;
-        self.last_update_ns = 0;
+        self.last_update_ns = UnixNanos::new(0);
     }
 }
 
@@ -397,7 +398,7 @@ mod tests {
             best_ask: ask,
             bid_volume: 1.0,
             ask_volume: 1.0,
-            timestamp_ns: 1000000000,
+            timestamp_ns: UnixNanos::new(1000000000),
         }
     }
 

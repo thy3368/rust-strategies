@@ -14,23 +14,19 @@ use nautilus_backtest::{
     engine::BacktestEngine,
 };
 use nautilus_model::{
-    identifiers::{TraderId, Venue, InstrumentId},
-    enums::{Environment, OmsType, AccountType, BookType},
+    identifiers::{TraderId, Venue},
+    enums::{OmsType, AccountType, BookType},
     types::Money,
 };
 use nautilus_common::enums::Environment;
 use nautilus_execution::models::{fee::FeeModelAny, fill::FillModel};
 use nautilus_model::instruments::stubs::crypto_perpetual_ethusdt;
-use tracing::{info, Level};
-use tracing_subscriber;
+use tracing::info;
 use ahash::AHashMap;
 
 use nautilus_strategies_rust::strategies::nautilus_compatible::create_strategy;
 
 fn main() -> Result<()> {
-    // 初始化日志系统
-    init_logging()?;
-
     info!("=================================================================");
     info!("Nautilus Trader - 回测引擎");
     info!("版本: {}", env!("CARGO_PKG_VERSION"));
@@ -78,19 +74,6 @@ fn main() -> Result<()> {
     info!("=================================================================");
     info!("✅ 回测系统执行完成");
     info!("=================================================================");
-
-    Ok(())
-}
-
-/// 初始化日志系统
-fn init_logging() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_max_level(Level::INFO)
-        .with_target(false)
-        .with_thread_ids(false)
-        .with_file(false)
-        .with_line_number(false)
-        .init();
 
     Ok(())
 }
@@ -169,15 +152,15 @@ fn add_instrument(engine: &mut BacktestEngine) -> Result<()> {
 }
 
 /// 添加策略
-fn add_strategy(engine: &mut BacktestEngine) -> Result<()> {
-    let strategy = create_strategy();
+fn add_strategy(_engine: &mut BacktestEngine) -> Result<()> {
+    let _strategy = create_strategy();
     // 这里需要根据 Nautilus 实际 API 来添加策略
     info!("策略创建成功: AV-STO-001");
     Ok(())
 }
 
 /// 加载历史数据
-fn load_historical_data(engine: &mut BacktestEngine) -> Result<()> {
+fn load_historical_data(_engine: &mut BacktestEngine) -> Result<()> {
     // TODO: 实现真实的历史数据加载
     // 目前使用模拟数据
     info!("使用模拟数据进行回测...");
