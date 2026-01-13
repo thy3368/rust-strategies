@@ -74,9 +74,9 @@ ustr = "1.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 proptest = "1.4"
 
-[[bench]]
-name = "strategy_bench"
-harness = false
+#[[bench]]
+#name = "strategy_bench"
+#harness = false
 
 [profile.dev]
 opt-level = 0
@@ -111,6 +111,6 @@ rustflags = [
     "-C", "target-feature=+avx2,+fma",
 ]
 
-[[example]]
-name = "backtest_example"
-path = "examples/backtest_example.rs"
+#[[example]]
+#name = "backtest_example"
+#path = "examples/backtest_example.rs"

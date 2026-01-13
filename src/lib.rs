@@ -10,6 +10,7 @@ pub mod indicators;
 pub use strategies::avellaneda_stoikov::AvellanedaStoikov;
 pub use strategies::config::StrategyConfig;
 
+
 /// 库版本
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 

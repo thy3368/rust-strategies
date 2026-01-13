@@ -4,6 +4,13 @@
 
 pub mod config;
 pub mod avellaneda_stoikov;
+pub mod nautilus_compatible;
 
 pub use config::StrategyConfig;
 pub use avellaneda_stoikov::AvellanedaStoikov;
+pub use nautilus_compatible::{
+    NautilusAvellanedaStoikov,
+    NautilusASConfig,
+    create_strategy,
+    create_strategy_with_config,
+};
