@@ -8,6 +8,7 @@
 
 use crate::CacheAligned;
 use nautilus_core::UnixNanos;
+use nautilus_model::enums::OrderSide;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
@@ -112,6 +113,7 @@ pub struct QuoteUpdate {
 
 /// AS策略主体 - 缓存行对齐优化
 #[repr(align(128))]
+#[derive(Debug)]
 pub struct AvellanedaStoikov {
     /// 配置参数
     config: ASConfig,
@@ -197,6 +199,7 @@ impl AvellanedaStoikov {
         match side {
             OrderSide::Buy => self.inventory.data += quantity,
             OrderSide::Sell => self.inventory.data -= quantity,
+            OrderSide::NoOrderSide => todo!(),
         }
 
         // 检查库存限制
@@ -352,12 +355,12 @@ impl AvellanedaStoikov {
     }
 }
 
-/// 订单方向
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum OrderSide {
-    Buy,
-    Sell,
-}
+// /// 订单方向
+// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// pub enum OrderSide {
+//     Buy,
+//     Sell,
+// }
 
 /// 策略统计数据
 #[derive(Debug, Clone, Serialize, Deserialize)]

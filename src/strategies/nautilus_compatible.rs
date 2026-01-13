@@ -55,6 +55,7 @@ impl NautilusASConfig {
 }
 
 /// 与 Nautilus 兼容的 Avellaneda-Stoikov 策略
+#[derive(Debug)]
 pub struct NautilusAvellanedaStoikov {
     /// 策略核心组件（包含 DataActorCore）
     core: StrategyCore,
@@ -151,28 +152,6 @@ impl NautilusAvellanedaStoikov {
     }
 }
 
-impl Component for NautilusAvellanedaStoikov {
-    fn component_id(&self) -> ComponentId {
-        todo!()
-    }
-
-    fn state(&self) -> ComponentState {
-        todo!()
-    }
-
-    fn transition_state(&mut self, _trigger: ComponentTrigger) -> Result<()> {
-        todo!()
-    }
-
-    fn register(
-        &mut self,
-        _trader_id: TraderId,
-        _clock: Rc<RefCell<dyn Clock>>,
-        _cache: Rc<RefCell<Cache>>,
-    ) -> Result<()> {
-        todo!()
-    }
-}
 
 // 实现策略接口
 impl Strategy for NautilusAvellanedaStoikov {
@@ -244,13 +223,13 @@ impl DataActor for NautilusAvellanedaStoikov {
     // 订单成交时调用
     fn on_order_filled(&mut self, event: &OrderFilled) -> Result<()> {
         // 更新库存
-        let side = match event.order_side {
-            OrderSide::Buy => crate::strategies::avellaneda_stoikov::OrderSide::Buy,
-            OrderSide::Sell => crate::strategies::avellaneda_stoikov::OrderSide::Sell,
-            OrderSide::NoOrderSide => return Ok(()),
-        };
+        // let side = match event.order_side {
+        //     OrderSide::Buy => crate::strategies::avellaneda_stoikov::OrderSide::Buy,
+        //     OrderSide::Sell => crate::strategies::avellaneda_stoikov::OrderSide::Sell,
+        //     OrderSide::NoOrderSide => return Ok(()),
+        // };
 
-        self.base_strategy.on_fill(side, event.last_qty.as_f64());
+        self.base_strategy.on_fill(event.order_side, event.last_qty.as_f64());
 
         log::info!(
             "订单成交: {} {} @ {} | 库存: {:.4}",

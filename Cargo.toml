@@ -31,6 +31,8 @@ nautilus-portfolio = { path = "nautilus_trader/crates/portfolio", default-featur
 nautilus-risk = { path = "nautilus_trader/crates/risk", default-features = false }
 nautilus-system = { path = "nautilus_trader/crates/system", default-features = false }
 nautilus-trading = { path = "nautilus_trader/crates/trading", default-features = false }
+nautilus-live = { path = "nautilus_trader/crates/live", default-features = false }
+nautilus-binance = { path = "nautilus_trader/crates/adapters/binance", default-features = false }
 
 
 # 数学和统计
