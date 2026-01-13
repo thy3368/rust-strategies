@@ -21,24 +21,17 @@ use tracing::{info, warn};
 use nautilus_strategies_rust::strategies::nautilus_compatible::create_strategy;
 
 fn main() -> Result<()> {
-    // 确保日志系统只初始化一次
-    static LOG_INITIALIZED: std::sync::Once = std::sync::Once::new();
-    LOG_INITIALIZED.call_once(|| {
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::INFO)
-            .init();
-    });
-
     // 加载环境变量 - 明确指定 .env 文件路径
     let env_path = std::env::current_dir()
         .map(|dir| dir.join(".env"))
         .map_err(|e| anyhow::anyhow!("无法获取当前目录: {}", e))?;
 
     if env_path.exists() {
-        info!("加载环境变量文件: {:?}", env_path);
+        // 不使用 info! 宏，避免初始化日志系统
+        println!("加载环境变量文件: {:?}", env_path);
         dotenv::from_path(&env_path)?;
     } else {
-        warn!("未找到 .env 文件: {:?}", env_path);
+        println!("未找到 .env 文件: {:?}", env_path);
     }
 
     info!("=================================================================");
