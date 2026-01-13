@@ -71,6 +71,7 @@ rust_decimal_macros = "1.39"
 anyhow = "1.0"
 thiserror = "2.0"
 ustr = "1.1"
+dotenv = "0.15"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

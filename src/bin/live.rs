@@ -5,12 +5,11 @@
 //!
 //! 用法:
 //! ```bash
-//! export BINANCE_API_KEY="your_api_key"
-//! export BINANCE_API_SECRET="your_api_secret"
 //! cargo run --release --bin live
 //! ```
 
 use anyhow::Result;
+use dotenv::dotenv;
 use nautilus_binance::config::{BinanceDataClientConfig, BinanceExecClientConfig};
 use nautilus_binance::factories::{BinanceDataClientFactory, BinanceExecutionClientFactory};
 use nautilus_binance::common::enums::{BinanceEnvironment, BinanceProductType};
@@ -22,6 +21,18 @@ use tracing::{info, warn};
 use nautilus_strategies_rust::strategies::nautilus_compatible::create_strategy;
 
 fn main() -> Result<()> {
+    // 加载环境变量 - 明确指定 .env 文件路径
+    let env_path = std::env::current_dir()
+        .map(|dir| dir.join(".env"))
+        .map_err(|e| anyhow::anyhow!("无法获取当前目录: {}", e))?;
+
+    if env_path.exists() {
+        info!("加载环境变量文件: {:?}", env_path);
+        dotenv::from_path(&env_path)?;
+    } else {
+        warn!("未找到 .env 文件: {:?}", env_path);
+    }
+
     // 初始化日志系统
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -35,30 +46,35 @@ fn main() -> Result<()> {
     // 从环境变量加载 Binance API 凭证
     let api_key = std::env::var("BINANCE_API_KEY").ok();
     let api_secret = std::env::var("BINANCE_API_SECRET").ok();
+    let is_testnet = std::env::var("BINANCE_TESTNET")
+        .map(|v| v.to_lowercase() == "true")
+        .unwrap_or(false);
 
     if api_key.is_none() || api_secret.is_none() {
         warn!("未检测到 Binance API 凭证环境变量");
-        warn!("请设置:");
-        warn!("  export BINANCE_API_KEY=\"your_api_key\"");
-        warn!("  export BINANCE_API_SECRET=\"your_api_secret\"");
+        warn!("请在 .env 文件中设置:");
+        warn!("  BINANCE_API_KEY=\"your_api_key\"");
+        warn!("  BINANCE_API_SECRET=\"your_api_secret\"");
         return Ok(());
     }
+
+    info!("使用 Binance {} 环境", if is_testnet { "测试网" } else { "实盘" });
 
     // 运行实盘交易
     tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()?
-        .block_on(run_live(api_key.unwrap(), api_secret.unwrap()))
+        .block_on(run_live(api_key.unwrap(), api_secret.unwrap(), is_testnet))
 }
 
 /// 运行实盘交易
-async fn run_live(api_key: String, api_secret: String) -> Result<()> {
+async fn run_live(api_key: String, api_secret: String, is_testnet: bool) -> Result<()> {
     info!("配置实盘交易引擎...");
 
     // 创建实盘节点构建器
     let mut builder = LiveNodeBuilder::new(
         TraderId::from("TRADER-001"),
-        Environment::Live, // 使用实盘环境（Environment::Sandbox 用于测试网）
+        if is_testnet { Environment::Sandbox } else { Environment::Live },
     )?;
 
     // 配置节点参数
@@ -76,7 +92,7 @@ async fn run_live(api_key: String, api_secret: String) -> Result<()> {
     info!("配置 Binance 数据客户端...");
     let data_config = BinanceDataClientConfig {
         product_types: vec![BinanceProductType::Spot],
-        environment: BinanceEnvironment::Mainnet,
+        environment: if is_testnet { BinanceEnvironment::Testnet } else { BinanceEnvironment::Mainnet },
         api_key: Some(api_key.clone()),
         api_secret: Some(api_secret.clone()),
         ..Default::default()
@@ -93,7 +109,7 @@ async fn run_live(api_key: String, api_secret: String) -> Result<()> {
         trader_id: TraderId::from("TRADER-001"),
         account_id: AccountId::from("BINANCE-001"),
         product_types: vec![BinanceProductType::Spot],
-        environment: BinanceEnvironment::Mainnet,
+        environment: if is_testnet { BinanceEnvironment::Testnet } else { BinanceEnvironment::Mainnet },
         api_key: Some(api_key),
         api_secret: Some(api_secret),
         ..Default::default()

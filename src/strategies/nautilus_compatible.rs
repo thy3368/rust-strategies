@@ -7,21 +7,16 @@ use crate::strategies::avellaneda_stoikov::{
     ASConfig, AvellanedaStoikov as BaseStrategy, OrderBookSnapshot, QuoteUpdate,
 };
 use anyhow::Result;
-use nautilus_common::actor::{Component, DataActor, DataActorCore};
-use nautilus_common::cache::Cache;
-use nautilus_common::clock::Clock;
-use nautilus_common::enums::{ComponentState, ComponentTrigger};
+use nautilus_common::actor::{DataActor, DataActorCore};
 use nautilus_model::enums::{OrderSide, TimeInForce};
 use nautilus_model::events::order::{
     canceled::OrderCanceled, filled::OrderFilled, rejected::OrderRejected,
 };
-use nautilus_model::identifiers::{ComponentId, InstrumentId, StrategyId, TraderId};
+use nautilus_model::identifiers::{InstrumentId, StrategyId};
 use nautilus_model::orderbook::OrderBook as NautilusOrderBook;
 use nautilus_model::types::{Price, Quantity};
 use nautilus_trading::strategy::{Strategy, StrategyConfig, StrategyCore};
-use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
-use std::rc::Rc;
 
 /// 与 Nautilus 兼容的策略配置
 #[derive(Debug, Clone)]
