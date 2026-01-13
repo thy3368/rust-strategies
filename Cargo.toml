@@ -1,0 +1,116 @@
+[package]
+name = "nautilus-strategies-rust"
+version = "0.2.0"
+edition = "2021"
+authors = ["Claude Code <noreply@anthropic.com>"]
+description = "High-performance trading strategies using Nautilus Trader framework"
+license = "MIT"
+
+[lib]
+name = "nautilus_strategies_rust"
+crate-type = ["rlib"]
+
+[[bin]]
+name = "backtest"
+path = "src/bin/backtest.rs"
+
+[[bin]]
+name = "live"
+path = "src/bin/live.rs"
+
+[dependencies]
+# Nautilus Trader 核心框架 (git submodule 本地路径依赖)
+nautilus-backtest = { path = "nautilus_trader/crates/backtest", default-features = false }
+nautilus-model = { path = "nautilus_trader/crates/model", default-features = false, features = ["stubs"] }
+nautilus-common = { path = "nautilus_trader/crates/common", default-features = false }
+nautilus-core = { path = "nautilus_trader/crates/core", default-features = false }
+nautilus-data = { path = "nautilus_trader/crates/data", default-features = false }
+nautilus-execution = { path = "nautilus_trader/crates/execution", default-features = false }
+nautilus-indicators = { path = "nautilus_trader/crates/indicators", default-features = false }
+nautilus-portfolio = { path = "nautilus_trader/crates/portfolio", default-features = false }
+nautilus-risk = { path = "nautilus_trader/crates/risk", default-features = false }
+nautilus-system = { path = "nautilus_trader/crates/system", default-features = false }
+nautilus-trading = { path = "nautilus_trader/crates/trading", default-features = false }
+
+
+# 数学和统计
+num-traits = "0.2"
+statrs = "0.17"
+
+# 序列化
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# 日志
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+log = "0.4"
+
+# 高性能数据结构
+hashbrown = "0.14"
+ahash = "0.8"
+
+# 时间处理
+chrono = "0.4"
+
+# 随机数生成
+rand = "0.8"
+
+# 异步运行时
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# Rust Decimal (与 Nautilus 一致)
+rust_decimal = "1.39"
+rust_decimal_macros = "1.39"
+
+# 其他工具
+anyhow = "1.0"
+thiserror = "2.0"
+ustr = "1.1"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+
+[[bench]]
+name = "strategy_bench"
+harness = false
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+# 符合CLAUDE.md的编译优化要求（与 Nautilus 对齐）
+opt-level = 3              # 最高优化级别
+lto = "fat"                # 全链接时优化
+codegen-units = 1          # 单一代码生成单元（最优化）
+panic = "abort"            # 紧急情况直接中止（避免展开开销）
+strip = "symbols"          # 移除符号表
+overflow-checks = false    # 生产环境禁用溢出检查（性能）
+incremental = false        # 禁用增量编译以获得最佳性能
+debug = false              # 不包含调试信息
+
+[profile.bench]
+inherits = "release"
+debug = true               # 保留调试信息用于性能分析
+
+# Apple Silicon (ARM64) 优化
+[target.'cfg(all(target_arch = "aarch64", target_vendor = "apple"))']
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "target-feature=+neon,+crypto,+aes",
+]
+
+# x86-64 优化
+[target.'cfg(target_arch = "x86_64")']
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "target-feature=+avx2,+fma",
+]
+
+[[example]]
+name = "backtest_example"
+path = "examples/backtest_example.rs"
